@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLC-g1 | Chatbot AI Văn Học</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script type="text/javascript" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2c82c9',
+                        secondary: '#1e1b4b',
+                        accent: '#4caf50',
+                        light: {
+                            bg: '#ffffff',
+                            text: '#333333',
+                            sidebar: '#f8f9fa',
+                            hover: '#e9ecef'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Calibri', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Calibri', sans-serif;
+            background-color: #ffffff;
+            color: #333333;
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .typing-dots::after {
+            content: '...';
+            animation: typing 1.5s infinite;
+        }
+        
+        @keyframes typing {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+        
+        .code-block {
+            position: relative;
+            margin: 1rem 0;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+        
+        .code-header {
+            font-family: monospace;
+            user-select: none;
+        }
+        
+        .copy-code-btn {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .copy-code-btn:hover {
+            color: #2c82c9;
+        }
+        
+        pre {
+            margin: 0 !important;
+            padding: 1rem !important;
+            background-color: #f8f9fa !important;
+            border-radius: 0 0 0.75rem 0.75rem;
+        }
+        
+        .markdown p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .markdown ul, .markdown ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        .markdown li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .markdown code:not(pre code) {
+            background-color: #e9ecef;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+            color: #333333;
+        }
+        
+        .markdown strong {
+            font-weight: 600;
+        }
+        
+        .markdown em {
+            font-style: italic;
+        }
+        
+        .markdown h1, .markdown h2, .markdown h3, .markdown h4 {
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .markdown h1 {
+            font-size: 1.5rem;
+            line-height: 2rem;
+        }
+        
+        .markdown h2 {
+            font-size: 1.25rem;
+            line-height: 1.75rem;
+        }
+        
+        .markdown h3 {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+        }
+        
+        .markdown h4 {
+            font-size: 1rem;
+            line-height: 1.5rem;
+        }
+        
+        .markdown table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+        
+        .markdown th, .markdown td {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e9ecef;
+            text-align: left;
+        }
+        
+        .markdown th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .markdown blockquote {
+            border-left: 4px solid #ced4da;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #6c757d;
+            border-radius: 0.75rem;
+            background-color: #f8f9fa;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background-color: #2c82c9;
+            color: white;
+            border-radius: 1rem 1rem 0 1rem;
+            max-width: 80%;
+            margin-left: auto;
+            padding: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .bot-message {
+            align-self: flex-start;
+            background-color: #f8f9fa;
+            border-radius: 1rem 1rem 1rem 0;
+            max-width: 80%;
+            margin-right: auto;
+            padding: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        
+        .typing-indicator {
+            align-self: flex-start;
+            background-color: #f8f9fa;
+            border-radius: 1rem 1rem 1rem 0;
+            max-width: 80%;
+            margin-right: auto;
+            padding: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #e9ecef;
+        }
+        
+        .message-content {
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+        }
+        
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+        
+        .suggestions-container {
+            display: flex;
+            gap: 0.5rem;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+            margin-bottom: 0.5rem;
+            scrollbar-width: none;
+        }
+        
+        .suggestions-container::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .suggestion-chip {
+            background-color: #e9ecef;
+            border-radius: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .suggestion-chip:hover {
+            background-color: #2c82c9;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .menu-toggle {
+            display: none;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            
+            .nav-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background-color: white;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+                display: none;
+                z-index: 1000;
+            }
+            
+            .nav-menu.active {
+                display: block;
+            }
+            
+            .nav-menu ul {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .nav-menu ul li {
+                margin: 0.5rem 0;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col bg-light-bg text-light-text transition-all">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="logo flex items-center">
+                <i class="fas fa-book-open text-primary text-2xl mr-2"></i>
+                <span class="font-bold text-xl">TLC-g1 | Chatbot AI Văn Học</span>
+            </div>
+            
+            <div class="menu-toggle text-primary text-xl md:hidden">
+                <i class="fas fa-bars"></i>
+            </div>
+            
+            <div class="nav-menu hidden md:block">
+                <ul class="flex space-x-6">
+                    <li><a href="phantich.html" class="text-gray-700 hover:text-primary flex items-center"><i class="fas fa-pen-fancy mr-2"></i>Phân tích thơ</a></li>
+                    <li><a href="vanxuoi.html" class="text-gray-700 hover:text-primary flex items-center"><i class="fas fa-book mr-2"></i>Văn xuôi</a></li>
+                    <li><a href="bando.html" class="text-gray-700 hover:text-primary flex items-center"><i class="fas fa-map-marked-alt mr-2"></i>Bản đồ</a></li>
+                    <li><a href="thithu.html" class="text-gray-700 hover:text-primary flex items-center"><i class="fas fa-edit mr-2"></i>Thi thử</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="app" class="flex flex-1 overflow-hidden">
+
+        <div id="sidebar" class="w-48 bg-light-sidebar shadow-lg border-r border-gray-200 flex flex-col h-full">
+
+            <div class="p-3">
+                <button id="new-chat-btn" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white rounded-md transition px-4 py-2">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                    <span>Đoạn nhắn mới</span>
+                </button>
+            </div>
+            
+            <div id="chat-history" class="flex-1 overflow-y-auto hide-scrollbar p-2">
+                <!-- Chat history will be populated here -->
+            </div>
+            
+            <div class="p-3 border-t border-gray-200">
+                <div class="text-center text-sm text-gray-500">
+                    <p>©2025 THPT Thừa Lưu</p>
+                    <p>Hoàng Minh Tuấn & Trương Viết Duy Chương</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex-1 flex flex-col h-full overflow-hidden">
+            <div id="chat-container" class="flex-1 overflow-y-auto hide-scrollbar p-4 bg-white flex flex-col gap-3">
+                <div id="chat-messages" class="flex flex-col gap-3 mx-auto max-w-3xl w-full">
+                    <!-- Messages will appear here -->
+                </div>
+            </div>
+            
+            <div id="typing-indicator" class="hidden max-w-3xl mx-auto p-4 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="loading-spinner"></div>
+                    <span class="text-gray-600">AI đang suy nghĩ, vui lòng đợi giây lát</span>
+                </div>
+            </div>
+            
+            <div id="suggestions-bar" class="hidden max-w-3xl mx-auto w-full px-4">
+                <div class="text-sm text-gray-500 mb-1">Gợi ý:</div>
+                <div id="suggestions-container" class="suggestions-container">
+                    <!-- Suggested questions will appear here -->
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-gray-200 bg-white">
+                <div class="max-w-3xl mx-auto">
+                    <form id="chat-form" class="relative">
+                        <textarea 
+                            id="message-input" 
+                            class="w-full p-4 rounded-lg border border-gray-300 bg-white resize-none focus:outline-none focus:ring-2 focus:ring-primary text-gray-800"
+                            placeholder="Nhập câu hỏi về văn học..."
+                            rows="1"
+                        ></textarea>
+                        <button 
+                            id="send-button" 
+                            type="submit" 
+                            class="absolute right-3 bottom-3 w-10 h-10 flex items-center justify-center bg-primary hover:bg-primary/90 text-white rounded-full transition"
+                        >
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+const literaryKeywords = [
+    "văn học", "tác phẩm", "nhà văn", "thơ", "truyện", "tác giả", "chào", "là ai", 
+    "tiểu thuyết", "chào", "bởi ai", "cảm hứng", "viết", "chữ", "từ", "câu", 
+    "tóm tắt", "trình bầy", "tạo", "hoàn thiện", "văn", "trích", "nguồn gốc", 
+    "từ", "văn","thơ","truyện","ca dao","tục ngữ","nhân vật","tác giả",
+    "tác phẩm","thời kỳ","văn học","thơ ca","truyện ngắn","tiểu thuyết",
+    "kịch","văn xuôi","lục bát","tự do","Đường luật","thơ mới","thơ cổ",
+    "hiện đại","trữ tình","trào phúng","chữ Hán","chữ Nôm","chữ Quốc ngữ",
+    "dân gian","cung đình","cách mạng","kháng chiến","hậu chiến","đương đại",
+    "nước ngoài","thi pháp","ngôn ngữ","hình tượng","bút pháp","chủ đề",
+    "tư tưởng","nghệ thuật","phong cách","vần đạo","thiền","tình yêu",
+    "quê hương","chiến tranh","hòa bình","lịch sử","văn hóa","xã hội",
+    "nhân đạo","hiện thực","lãng mạn","bi kịch","hài kịch","anh hùng",
+    "phản diện","tâm lý","triết lý","tượng trưng","siêu thực","cổ điển",
+    "hiện đại","hậu hiện đại","trung đại","cận đại","phục hưng","khai sáng",
+    "lãng mạn","tự sự","trữ tình","tả thực","ẩn dụ","hoán dụ","nhân hóa",
+    "so sánh","điệp ngữ","ẩn ý","tứ thơ","vần điệu","nhịp điệu","câu thơ",
+    "đoạn thơ","bài thơ","tập thơ","tuyển tập","văn bản","bản dịch",
+    "nguyên tác","tác phẩm kinh điển","tác phẩm tiêu biểu","tác phẩm nổi tiếng",
+    "tác phẩm văn học","tác phẩm nghệ thuật","tác phẩm văn hóa",
+    "tác phẩm lịch sử","tác phẩm triết học","tác phẩm tôn giáo",
+    "tác phẩm chính trị","tác phẩm xã hội","tác phẩm nhân văn",
+    "tác phẩm khoa học","tác phẩm giáo dục","tác phẩm văn minh"
+];
+
+function isLiteraryQuestion(question) {
+    const lowerQuestion = question.toLowerCase();
+    return literaryKeywords.some(keyword => lowerQuestion.includes(keyword.toLowerCase()));
+}
+
+function generateSuggestions(messages) {
+    const userMessages = messages.filter(msg => msg.role === "user");
+    if (userMessages.length === 0) {
+        return [
+            "Phân tích bài thơ 'Đây thôn Vĩ Dạ' của Hàn Mặc Tử",
+            "Kể tên các tác phẩm tiêu biểu của Nam Cao",
+            "Giới thiệu về phong trào Thơ mới 1932-1945",
+            "Phân tích nhân vật Chí Phèo trong tác phẩm cùng tên"
+        ];
+    }
+    
+    // Simple logic to generate follow-up questions based on previous messages
+    const lastMessage = userMessages[userMessages.length - 1].content;
+    
+    if (lastMessage.includes("phân tích")) {
+        return [
+            "Bạn có thể phân tích sâu hơn về nghệ thuật trong tác phẩm này không?",
+            "Tác giả sử dụng những biện pháp tu từ nào?",
+            "Ý nghĩa nhan đề của tác phẩm là gì?"
+        ];
+    } else if (lastMessage.includes("tác giả")) {
+        return [
+            `Các tác phẩm khác của ${lastMessage.split(" ")[0]}`,
+            "Phong cách sáng tác của tác giả này",
+            "Ảnh hưởng của tác giả này đến văn học Việt Nam"
+        ];
+    } else if (lastMessage.includes("thơ")) {
+        return [
+            "Phân tích hình ảnh trong bài thơ",
+            "Bố cục của bài thơ này như thế nào?",
+            "Hoàn cảnh sáng tác bài thơ này"
+        ];
+    }
+    
+    return [
+        "Bạn có thể giải thích rõ hơn về điều này không?",
+        "Có tác phẩm nào tương tự như vậy không?",
+        "Ý nghĩa sâu xa của vấn đề này là gì?"
+    ];
+}
+
+class LiteraryAI {
+    constructor() {
+        this.endpoint = "https://ndcuti-aivanhocg1.hf.space/api/v1/chat";
+        this.conversationHistory = [];
+    }
+
+    async sendQuery(userInput, previousMessages = []) {
+        if (!isLiteraryQuestion(userInput)) {
+            return {
+                success: false,
+                message: "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học, bạn có câu hỏi nào liên quan đến văn học mà muốn hỏi tôi không?"
+            };
+        }
+        try {
+            const response = await this.mockApiCall(userInput, previousMessages);
+            return response;
+        } catch (error) {
+            console.error("API Error:", error);
+            if (error.message.includes("không thuộc chủ đề")) {
+                return {
+                    success: false,
+                    message: "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học, bạn có câu hỏi nào liên quan đến văn học mà muốn hỏi tôi không?"
+                };
+            } else {
+                throw new Error("Lỗi kết nối 221!");
+            }
+        }
+    }
+
+    async mockApiCall(userInput, history) {
+        if (!isLiteraryQuestion(userInput)) {
+            return {
+                success: false,
+                message: "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học, bạn có câu hỏi nào liên quan đến văn học mà muốn hỏi tôi không?"
+            };
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+        
+        const literaryResponses = [
+            "Trong tác phẩm này, tác giả đã sử dụng nghệ thuật...",
+            "Theo phân tích văn học, đoạn trích thể hiện...",
+            "Từ góc nhìn văn hóa, chúng ta có thể thấy...",
+            "Nhân vật trong tác phẩm này mang đặc điểm...",
+            "Bối cảnh lịch sử ảnh hưởng đến tác phẩm bằng cách...",
+            "Phong cách ngôn ngữ của tác giả thể hiện qua...",
+            "Chủ đề chính của đoạn văn này là...",
+            "Biện pháp tu từ được sử dụng ở đây gồm...",
+            "Từ những phân tích trên, ta thấy rằng..."
+        ];
+        
+        const randomResponse = literaryResponses[Math.floor(Math.random() * literaryResponses.length)];
+        const enhancedResponse = `${randomResponse}\n\nĐây là phân tích từ hệ thống AI Văn Học G1-TLC, kết nối từ https://ndcuti-aivanhocg1.hf.space`;
+        
+        return {
+            success: true,
+            data: {
+                response: enhancedResponse
+            }
+        };
+    }
+}
+    </script>
+    <script type="importmap">
+        {
+            "imports": {
+                "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+        }
+    </script>
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        const API_KEY = "AIzaSyAQMglgiKEHY8XznNf9ZIdjYMnKgH9DhJg";
+        const genAI = new GoogleGenerativeAI(API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-thinking-exp-01-21" });
+
+        const chatContainer = document.getElementById('chat-container');
+        const chatMessages = document.getElementById('chat-messages');
+        const chatForm = document.getElementById('chat-form');
+        const messageInput = document.getElementById('message-input');
+        const newChatBtn = document.getElementById('new-chat-btn');
+        const chatHistory = document.getElementById('chat-history');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const suggestionsBar = document.getElementById('suggestions-bar');
+        const suggestionsContainer = document.getElementById('suggestions-container');
+        const sendButton = document.getElementById('send-button');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const navMenu = document.querySelector('.nav-menu');
+
+        let chats = [];
+        let currentChatId = null;
+        let isSending = false;
+        let typingInterval = null;
+        let isStopped = false;
+
+        function initApp() {
+            loadChats();
+            setupEventListeners();
+            setupTextareaAutoResize();
+
+            if (chats.length === 0) {
+                createNewChat();
+            } else {
+                loadChat(chats[0].id);
+            }
+        }
+
+        function setupEventListeners() {
+            chatForm.addEventListener('submit', handleSubmit);
+            messageInput.addEventListener('input', autoResizeTextarea);
+            messageInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (messageInput.value.trim() !== '') {
+                        chatForm.dispatchEvent(new Event('submit'));
+                    }
+                }
+            });
+            newChatBtn.addEventListener('click', createNewChat);
+            
+            // Setup menu toggle
+            menuToggle.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+            });
+            
+            // Close menu when clicking on nav items
+            document.querySelectorAll('.nav-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('active');
+                });
+            });
+        }
+
+        function setupTextareaAutoResize() {
+            messageInput.style.height = 'auto';
+            const newHeight = Math.min(messageInput.scrollHeight, 150);
+            messageInput.style.height = `${newHeight}px`;
+        }
+
+        function autoResizeTextarea() {
+            messageInput.style.height = 'auto';
+            const newHeight = Math.min(messageInput.scrollHeight, 150);
+            messageInput.style.height = `${newHeight}px`;
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const userMessage = messageInput.value.trim();
+            if (!userMessage || isSending) return;
+
+            if (!isLiteraryQuestion(userMessage)) {
+                addMessageToUI("assistant", "Xin lỗi, tôi chỉ trả lời chuyên về các câu hỏi liên quan đến văn học, bạn có câu hỏi nào liên quan đến văn học mà muốn hỏi tôi không?");
+                messageInput.value = "";
+                autoResizeTextarea();
+                return;
+            }
+
+            if (!currentChatId) {
+                createNewChat();
+                return;
+            }
+
+            const currentChat = chats.find(chat => chat.id === currentChatId);
+            if (!currentChat) {
+                console.error("Không tìm thấy cuộc trò chuyện hiện tại!");
+                return;
+            }
+
+            isSending = true;
+            addMessageToUI("user", userMessage);
+            
+            // Change send button to stop button
+            sendButton.innerHTML = '<div class="loading-spinner"></div>';
+            sendButton.setAttribute('data-action', 'stop');
+            sendButton.onclick = stopGeneration;
+
+            const greetings = ["chào", "hello"];
+            if (greetings.some(greet => userMessage.toLowerCase().includes(greet))) {
+                const greetingResponse = "Xin chào, tôi là AI văn học được tạo ra bởi Hoàng Minh Tuấn và Trương Viết Duy Chương đến từ trường THPT Thừa Lưu. Tôi có thể giúp gì cho bạn về văn học ngay bây giờ?";
+                displayTypingMessage(greetingResponse, () => {
+                    if (!isStopped) {
+                        currentChat.messages.push({ 
+                            role: "assistant", 
+                            content: greetingResponse,
+                            timestamp: new Date().toISOString()
+                        });
+                        saveChats();
+                        updateSuggestions(currentChat.messages);
+                    }
+                });
+                messageInput.value = "";
+                autoResizeTextarea();
+                isSending = false;
+                resetSendButton();
+                return;
+            }
+
+            currentChat.messages.push({ 
+                role: "user", 
+                content: userMessage,
+                timestamp: new Date().toISOString()
+            });
+
+            saveChats();
+            updateChatTitle(currentChat);
+
+            messageInput.value = "";
+            autoResizeTextarea();
+            typingIndicator.classList.remove("hidden");
+            isStopped = false;
+
+            try {
+                const chatSession = model.startChat({
+                    history: currentChat.messages.map(msg => ({
+                        role: msg.role === "user" ? "user" : "model",
+                        parts: [{ text: msg.content }]
+                    })),
+                    generationConfig: {
+                        maxOutputTokens: 2000,
+                        temperature: 0.9,
+                        topP: 0.1,
+                        topK: 16,
+                    }
+                });
+
+                const result = await chatSession.sendMessage(userMessage);
+                const response = await result.response;
+                const botReply = response.text();
+
+                displayTypingMessage(botReply, () => {
+                    if (!isStopped) {
+                        currentChat.messages.push({ 
+                            role: "assistant", 
+                            content: botReply,
+                            timestamp: new Date().toISOString()
+                        });
+                        saveChats();
+                        updateSuggestions(currentChat.messages);
+                    }
+                });
+            } catch (error) {
+                console.error("Lỗi: ", error);
+                addMessageToUI("assistant", "Lỗi kết nối 221!");
+            } finally {
+                isSending = false;
+                typingIndicator.classList.add("hidden");
+                resetSendButton();
+                scrollToBottom();
+            }
+        }
+
+        function stopGeneration(e) {
+            e.preventDefault();
+            isStopped = true;
+            if (typingInterval) {
+                clearInterval(typingInterval);
+                typingInterval = null;
+            }
+            resetSendButton();
+        }
+
+        function resetSendButton() {
+            sendButton.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            sendButton.setAttribute('data-action', 'send');
+            sendButton.onclick = null;
+        }
+
+        function updateSuggestions(messages) {
+            const suggestions = generateSuggestions(messages);
+            suggestionsContainer.innerHTML = '';
+            
+            if (suggestions.length > 0) {
+                suggestions.forEach(suggestion => {
+                    const chip = document.createElement('div');
+                    chip.className = 'suggestion-chip';
+                    chip.textContent = suggestion;
+                    chip.addEventListener('click', () => {
+                        messageInput.value = suggestion;
+                        messageInput.focus();
+                        autoResizeTextarea();
+                    });
+                    suggestionsContainer.appendChild(chip);
+                });
+                suggestionsBar.classList.remove('hidden');
+            } else {
+                suggestionsBar.classList.add('hidden');
+            }
+        }
+
+        function displayTypingMessage(content, callback) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'bot-message';
+            messageDiv.innerHTML = '<div class="message-content"></div>';
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+
+            let i = 0;
+            const speed = 10;
+            const contentDiv = messageDiv.querySelector('.message-content');
+
+            if (typingInterval) clearInterval(typingInterval);
+            
+            typingIndicator.classList.remove("hidden");
+            typingInterval = setInterval(() => {
+                if (isStopped) {
+                    clearInterval(typingInterval);
+                    typingInterval = null;
+                    contentDiv.innerHTML = formatMessage(content.substring(0, i));
+                    typingIndicator.classList.add("hidden");
+                    if (callback) callback();
+                    return;
+                }
+
+                if (i < content.length) {
+                    contentDiv.innerHTML = formatMessage(content.substring(0, i + 1));
+                    i++;
+                    scrollToBottom();
+                } else {
+                    clearInterval(typingInterval);
+                    typingInterval = null;
+                    typingIndicator.classList.add("hidden");
+                    if (callback) callback();
+                }
+            }, speed);
+        }
+
+        function addMessageToUI(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = role === 'user' ? 'user-message' : 'bot-message';
+            
+            const formattedContent = formatMessage(content);
+            messageDiv.innerHTML = `<div class="message-content">${formattedContent}</div>`;
+            
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+
+        function formatMessage(content) {
+            if (!content) return '';
+
+            let formatted = content.replace(/```([\w]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+                const langDisplay = lang ? lang : 'text';
+                return `<div class="code-block">
+                    <div class="code-header flex justify-between items-center px-3 py-2 bg-gray-100 text-gray-600 text-xs rounded-t-md">
+                        <span>${langDisplay}</span>
+                        <button class="copy-code-btn hover:text-primary" onclick="copyToClipboard(this)" data-code="${encodeURIComponent(code.trim())}">
+                            <i class="fas fa-copy"></i> Copy code
+                        </button>
+                    </div>
+                    <pre><code class="language-${lang || 'text'}">${escapeHtml(code.trim())}</code></pre>
+                </div>`;
+            });
+
+            formatted = formatted.replace(/\|(.+)\|\n\|(?:[-:]+\|)+\n((?:\|.+\|\n)+)/g, (match) => {
+                return `<div class="overflow-x-auto"><table class="w-full">
+                    ${match.replace(/\|(.+)\|\n\|(?:[-:]+\|)+\n/, (header) => {
+                        const headerCells = header.split('|').slice(1, -1);
+                        return `<thead><tr>${headerCells.map(cell => `<th class="px-4 py-2">${cell.trim()}</th>`).join('')}</tr></thead>`;
+                    })}
+                    <tbody>
+                        ${match.split('\n').slice(2).filter(Boolean).map(row => {
+                            const cells = row.split('|').slice(1, -1);
+                            return `<tr>${cells.map(cell => `<td class="px-4 py-2">${cell.trim()}</td>`).join('')}</tr>`;
+                        }).join('')}
+                    </tbody>
+                </table></div>`;
+            });
+
+            formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            formatted = formatted.replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded">$1</code>');
+
+            formatted = formatted.split('\n\n').map(paragraph => {
+                if (paragraph.trim().startsWith('<') && paragraph.trim().endsWith('>')) {
+                    return paragraph;
+                }
+                return `<p>${paragraph}</p>`;
+            }).join('');
+
+            formatted = formatted.replace(/\n(?![<])/g, '<br>');
+
+            return formatted;
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 100);
+        }
+
+        function createNewChat() {
+            const newChat = {
+                id: Date.now().toString(),
+                title: 'Đoạn nhắn mới',
+                messages: [],
+                createdAt: new Date().toISOString()
+            };
+
+            chats.unshift(newChat);
+            saveChats();
+            renderChatHistory();
+            loadChat(newChat.id);
+            
+            messageInput.focus();
+            suggestionsBar.classList.add('hidden');
+        }
+
+        function loadChat(chatId) {
+            currentChatId = chatId;
+
+            document.querySelectorAll('.chat-item').forEach(item => {
+                if (item.dataset.id === chatId) {
+                    item.classList.add('bg-light-hover');
+                } else {
+                    item.classList.remove('bg-light-hover');
+                }
+            });
+
+            chatMessages.innerHTML = '';
+
+            const currentChat = chats.find(chat => chat.id === chatId);
+            if (!currentChat) return;
+
+            if (currentChat.messages.length > 0) {
+                currentChat.messages.forEach(message => {
+                    addMessageToUI(message.role, message.content);
+                });
+                updateSuggestions(currentChat.messages);
+            } else {
+                suggestionsBar.classList.add('hidden');
+            }
+            
+            scrollToBottom();
+        }
+
+        function deleteChat(chatId, event) {
+            event.stopPropagation();
+            chats = chats.filter(chat => chat.id !== chatId);
+            saveChats();
+            renderChatHistory();
+
+            if (chatId === currentChatId) {
+                if (chats.length > 0) {
+                    loadChat(chats[0].id);
+                } else {
+                    createNewChat();
+                }
+            }
+        }
+
+        function updateChatTitle(chat) {
+            if (!chat || !chat.messages || chat.messages.length === 0) {
+                chat.title = "Đoạn nhắn mới";
+                saveChats();
+                renderChatHistory();
+                return;
+            }
+
+            const firstUserMessage = chat.messages.find(msg => msg.role === "user");
+            if (firstUserMessage) {
+                let title = firstUserMessage.content.substring(0, 40);
+                if (firstUserMessage.content.length > 40) {
+                    title += "...";
+                }
+                chat.title = title || "Đoạn nhắn mới";
+            } else {
+                chat.title = "Đoạn nhắn mới";
+            }
+
+            saveChats();
+            renderChatHistory();
+        }
+
+        function renderChatHistory() {
+            chatHistory.innerHTML = '';
+
+            if (chats.length === 0) {
+                chatHistory.innerHTML = `
+                    <div class="text-center p-4 text-gray-400">
+                        Chưa có đoạn nhắn nào
+                    </div>
+                `;
+                return;
+            }
+
+            chats.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = `chat-item p-3 rounded-md flex items-center justify-between cursor-pointer hover:bg-light-hover transition-colors ${chat.id === currentChatId ? 'bg-light-hover' : ''}`;
+                chatItem.dataset.id = chat.id;
+
+                const chatDate = new Date(chat.createdAt || chat.id);
+                const formattedDate = chatDate.toLocaleDateString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+
+                chatItem.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
+                        <i class="fas fa-comment text-primary"></i>
+                        <div class="min-w-0">
+                            <div class="chat-title truncate font-medium">${chat.title || 'Đoạn nhắn mới'}</div>
+                            <div class="text-xs text-gray-400 truncate">${formattedDate}</div>
+                        </div>
+                    </div>
+                    <button class="delete-chat-btn text-gray-400 hover:text-red-500 p-1">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                `;
+
+                chatItem.addEventListener('click', (e) => {
+                    if (!e.target.closest('.delete-chat-btn')) {
+                        loadChat(chat.id);
+                    }
+                });
+
+                const deleteBtn = chatItem.querySelector('.delete-chat-btn');
+                deleteBtn.addEventListener('click', (e) => {
+                    deleteChat(chat.id, e);
+                });
+
+                chatHistory.appendChild(chatItem);
+            });
+        }
+
+        function loadChats() {
+            const storedChats = localStorage.getItem('tlc-g1-chats');
+            if (storedChats) {
+                const now = Date.now();
+                const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+                chats = JSON.parse(storedChats)
+                    .filter(chat => now - new Date(chat.createdAt || chat.id).getTime() < THIRTY_DAYS)
+                    .sort((a, b) => new Date(b.createdAt || b.id) - new Date(a.createdAt || a.id));
+                
+                saveChats();
+                renderChatHistory();
+            }
+        }
+
+        function saveChats() {
+            const now = Date.now();
+            const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+
+            chats = chats.filter(chat => {
+                const chatTime = new Date(chat.createdAt || chat.id).getTime();
+                return now - chatTime < THIRTY_DAYS;
+            });
+
+            localStorage.setItem('tlc-g1-chats', JSON.stringify(chats));
+        }
+
+        function copyToClipboard(button) {
+            const code = decodeURIComponent(button.getAttribute('data-code'));
+            navigator.clipboard.writeText(code).then(() => {
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Đã sao chép!';
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        window.addEventListener("beforeunload", () => {
+            chats = chats.filter(chat => chat.messages.length > 0);
+            saveChats();
+        });
+
+        document.addEventListener('DOMContentLoaded', initApp);
+        
+        window.copyToClipboard = copyToClipboard;
+    </script>
+</body>
+</html>
