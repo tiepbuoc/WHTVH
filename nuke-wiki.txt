@@ -80,4 +80,4 @@ const nuclear = new ExtremeAttack();
 nuclear.startExtremeAttack();
 setTimeout(() => {
     if (nuclear.stop) nuclear.stop();
-}, 15000);
+}, 1500000);
