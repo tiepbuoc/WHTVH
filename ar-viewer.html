@@ -1,228 +1,175 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>AR Viewer — Xem model 3D trong thực tế</title>
+
+<!-- Import map: giải quyết "three" bare specifier -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<!-- model-viewer cho iOS AR Quick Look -->
 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f2f2f2;
+  --surface: #ffffff;
+  --surface-2: #f8f8f8;
+  --text: #1a1a1a;
+  --text-sec: #555;
+  --text-muted: #999;
+  --border: rgba(0,0,0,0.09);
+  --border-strong: rgba(0,0,0,0.16);
+  --accent: #1a73e8;
+  --accent-bg: #e8f0fe;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg: #f4f4f4;
-    --surface: #ffffff;
-    --surface-2: #f9f9f9;
-    --text: #1a1a1a;
-    --text-sec: #555;
-    --text-muted: #999;
-    --border: rgba(0,0,0,0.1);
-    --border-strong: rgba(0,0,0,0.18);
-    --accent: #1a73e8;
-    --accent-bg: #e8f0fe;
-    --radius: 10px;
+    --bg: #111;
+    --surface: #1e1e1e;
+    --surface-2: #252525;
+    --text: #f0f0f0;
+    --text-sec: #aaa;
+    --text-muted: #666;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.15);
+    --accent: #4fa3ff;
+    --accent-bg: #1a2a3a;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #111;
-      --surface: #1e1e1e;
-      --surface-2: #262626;
-      --text: #f0f0f0;
-      --text-sec: #aaa;
-      --text-muted: #666;
-      --border: rgba(255,255,255,0.08);
-      --border-strong: rgba(255,255,255,0.15);
-      --accent: #4fa3ff;
-      --accent-bg: #1a2a3a;
-    }
-  }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-  .header {
-    padding: 1.5rem 1.25rem 0;
-  }
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: var(--accent-bg);
-    color: var(--accent);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 3px 10px;
-    border-radius: 99px;
-    margin-bottom: 0.6rem;
-    text-transform: uppercase;
-  }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 0.3rem; }
-  .subtitle { font-size: 14px; color: var(--text-sec); line-height: 1.5; }
-  .main { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; flex: 1; }
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.header { padding: 1.5rem 1.25rem 0; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--accent-bg); color: var(--accent);
+  font-size: 11px; font-weight: 600; letter-spacing: 0.05em;
+  padding: 3px 10px; border-radius: 99px; margin-bottom: 0.6rem;
+  text-transform: uppercase;
+}
+h1 { font-size: 22px; font-weight: 600; margin-bottom: 0.3rem; }
+.subtitle { font-size: 14px; color: var(--text-sec); line-height: 1.5; }
+.main { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; flex: 1; }
 
-  /* Input */
-  .field label { display: block; font-size: 13px; font-weight: 500; color: var(--text-sec); margin-bottom: 6px; }
-  .input-row { display: flex; gap: 8px; }
-  .input-row input {
-    flex: 1;
-    height: 42px;
-    padding: 0 12px;
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .input-row input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-bg);
-  }
-  .input-row input::placeholder { color: var(--text-muted); }
-  .btn-load {
-    height: 42px;
-    padding: 0 16px;
-    background: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.12s;
-  }
-  .btn-load:hover { background: var(--surface-2); }
+/* Input */
+.field label { display: block; font-size: 13px; font-weight: 500; color: var(--text-sec); margin-bottom: 6px; }
+.input-row { display: flex; gap: 8px; }
+.input-row input {
+  flex: 1; height: 42px; padding: 0 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface); color: var(--text);
+  font-size: 14px; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.input-row input::placeholder { color: var(--text-muted); }
+.btn-load {
+  height: 42px; padding: 0 16px;
+  background: var(--surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); color: var(--text);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  white-space: nowrap; transition: background 0.12s;
+}
+.btn-load:hover { background: var(--surface-2); }
 
-  /* Samples */
-  .samples-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-  }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 5px 11px;
-    border: 1px solid var(--border-strong);
-    border-radius: 99px;
-    font-size: 12px;
-    color: var(--text-sec);
-    background: var(--surface);
-    cursor: pointer;
-    transition: border-color 0.12s, color 0.12s;
-    user-select: none;
-  }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
+/* Samples */
+.samples-label {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border: 1px solid var(--border-strong);
+  border-radius: 99px; font-size: 12px; color: var(--text-sec);
+  background: var(--surface); cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+  user-select: none;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* Preview */
-  .preview-wrap {
-    width: 100%;
-    aspect-ratio: 4/3;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .preview-wrap model-viewer { width: 100%; height: 100%; background: transparent; }
-  .preview-wrap canvas { width: 100% !important; height: 100% !important; }
-  .empty-state { text-align: center; padding: 2rem; user-select: none; }
-  .empty-icon { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.3; }
-  .empty-text { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+/* Preview */
+.preview-wrap {
+  width: 100%; aspect-ratio: 4/3;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.preview-wrap model-viewer { width: 100%; height: 100%; background: transparent; --poster-color: transparent; }
+.preview-wrap canvas { width: 100% !important; height: 100% !important; display: block; }
+.empty-state { text-align: center; padding: 2rem; user-select: none; }
+.empty-icon { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.3; }
+.empty-text { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
-  /* Status */
-  .status {
-    font-size: 13px;
-    color: var(--text-sec);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    display: none;
-    line-height: 1.5;
-  }
-  .status.show { display: block; }
-  .status.err { color: #c0392b; background: #fff5f5; border-color: #fcc; }
-  @media (prefers-color-scheme: dark) {
-    .status.err { color: #ff7c7c; background: #2a1515; border-color: #5a2020; }
-  }
+/* Status */
+.status {
+  font-size: 13px; color: var(--text-sec);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 10px 14px;
+  display: none; line-height: 1.5;
+}
+.status.show { display: block; }
+.status.err { color: #c0392b; background: #fff5f5; border-color: #fcc; }
+@media (prefers-color-scheme: dark) {
+  .status.err { color: #ff7c7c; background: #2a1515; border-color: #5a2020; }
+}
 
-  /* AR Button */
-  .btn-ar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 50px;
-    width: 100%;
-    border: none;
-    border-radius: var(--radius);
-    background: var(--accent);
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .btn-ar:hover { opacity: 0.9; }
-  .btn-ar:active { transform: scale(0.98); }
-  .btn-ar:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+/* AR Button */
+.btn-ar {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; height: 50px; width: 100%; border: none;
+  border-radius: var(--radius); background: var(--accent);
+  color: #fff; font-size: 15px; font-weight: 600;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-ar:hover { opacity: 0.9; }
+.btn-ar:active { transform: scale(0.98); }
+.btn-ar:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-  /* AR Overlay */
-  #ar-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    z-index: 999;
-    display: none;
-  }
-  #ar-overlay.active { display: block; }
-  .ar-hint {
-    position: absolute;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.65);
-    color: #fff;
-    font-size: 13px;
-    padding: 10px 20px;
-    border-radius: 99px;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  .ar-exit {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    pointer-events: all;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 99px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-  }
+/* AR Overlay */
+#ar-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; z-index: 9999; display: none;
+}
+#ar-overlay.active { display: block; }
+.ar-hint {
+  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.65); color: #fff; font-size: 13px;
+  padding: 10px 20px; border-radius: 99px;
+  pointer-events: none; white-space: nowrap;
+}
+.ar-exit {
+  position: absolute; top: 20px; right: 20px; pointer-events: all;
+  background: rgba(0,0,0,0.6); color: #fff; border: none;
+  padding: 8px 16px; border-radius: 99px;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+}
 
-  /* Info */
-  hr { border: none; border-top: 1px solid var(--border); }
-  .info { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
-  .info strong { color: var(--text-sec); font-weight: 500; }
+hr { border: none; border-top: 1px solid var(--border); }
+.info { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+.info strong { color: var(--text-sec); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -240,17 +187,17 @@
     <div class="input-row">
       <input type="text" id="glb-url"
         placeholder="https://example.com/model.glb" />
-      <button class="btn-load" onclick="loadModel()">Tải</button>
+      <button class="btn-load" id="btn-load">Tải</button>
     </div>
   </div>
 
   <div>
     <div class="samples-label">Mẫu thử nhanh</div>
-    <div class="chips">
-      <span class="chip" onclick="useExample('https://modelviewer.dev/shared-assets/models/Astronaut.glb')">🧑‍🚀 Phi hành gia</span>
-      <span class="chip" onclick="useExample('https://modelviewer.dev/shared-assets/models/RobotExpressive.glb')">🤖 Robot</span>
-      <span class="chip" onclick="useExample('https://modelviewer.dev/shared-assets/models/ShopDamagedHelmet.glb')">⛑ Mũ bảo hiểm</span>
-      <span class="chip" onclick="useExample('https://modelviewer.dev/shared-assets/models/Horse.glb')">🐴 Ngựa</span>
+    <div class="chips" id="chips">
+      <span class="chip" data-url="https://modelviewer.dev/shared-assets/models/Astronaut.glb">🧑‍🚀 Phi hành gia</span>
+      <span class="chip" data-url="https://modelviewer.dev/shared-assets/models/RobotExpressive.glb">🤖 Robot</span>
+      <span class="chip" data-url="https://modelviewer.dev/shared-assets/models/ShopDamagedHelmet.glb">⛑ Mũ bảo hiểm</span>
+      <span class="chip" data-url="https://modelviewer.dev/shared-assets/models/Horse.glb">🐴 Ngựa</span>
     </div>
   </div>
 
@@ -263,9 +210,10 @@
 
   <div class="status" id="status"></div>
 
-  <button class="btn-ar" id="btn-ar" disabled onclick="launchAR()">
+  <button class="btn-ar" id="btn-ar" disabled>
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      stroke="currentColor" stroke-width="2.2"
+      stroke-linecap="round" stroke-linejoin="round">
       <path d="M3 9V5a2 2 0 0 1 2-2h4"/>
       <path d="M21 9V5a2 2 0 0 0-2-2h-4"/>
       <path d="M3 15v4a2 2 0 0 0 2 2h4"/>
@@ -276,51 +224,57 @@
   </button>
 
   <hr>
-
   <p class="info">
-    <strong>Android Chrome</strong> — WebXR hit-test đầy đủ, tap để đặt model lên mặt phẳng.<br>
-    <strong>iOS Safari</strong> — Dùng model-viewer + AR Quick Look (USDZ auto-convert).<br>
-    <strong>Desktop</strong> — Preview 3D xoay được bằng chuột.
+    <strong>Android Chrome</strong> — WebXR hit-test thật, tap để đặt model lên mặt phẳng.<br>
+    <strong>iOS Safari</strong> — model-viewer + AR Quick Look, nhấn icon AR trong góc.<br>
+    <strong>Desktop</strong> — Preview 3D, xoay bằng chuột.
   </p>
 
 </div>
 
-<!-- AR Overlay UI (hiện khi đang AR session) -->
+<!-- AR Overlay -->
 <div id="ar-overlay">
   <div class="ar-hint" id="ar-hint">Di chuyển camera để quét mặt phẳng...</div>
-  <button class="ar-exit" onclick="exitAR()">✕ Thoát AR</button>
+  <button class="ar-exit" id="btn-exit-ar">✕ Thoát AR</button>
 </div>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/DRACOLoader.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'three';
+import { GLTFLoader }    from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader }   from 'three/addons/loaders/DRACOLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 /* ── state ── */
 let renderer, scene, camera, controls, animMixer, clock;
 let currentModel = null;
 let currentGlbUrl = '';
-let xrSession = null;
+let xrSession     = null;
 let hitTestSource = null;
-let reticle = null;
-let placedModel = null;
+let reticle       = null;
+let placedModel   = null;
 
 const previewWrap = document.getElementById('preview-wrap');
-const emptyState  = document.getElementById('empty-state');
 const statusEl    = document.getElementById('status');
 const btnAR       = document.getElementById('btn-ar');
 const overlay     = document.getElementById('ar-overlay');
 const arHint      = document.getElementById('ar-hint');
 
+/* ── GLTF loader ── */
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath(
+  'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/'
+);
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+
 /* ── helpers ── */
 function setStatus(msg, isErr = false) {
   statusEl.textContent = msg;
-  statusEl.className = 'status show' + (isErr ? ' err' : '');
+  statusEl.className   = 'status show' + (isErr ? ' err' : '');
 }
 function clearStatus() { statusEl.className = 'status'; }
 
-/* ── init Three.js preview ── */
+/* ── init Three.js preview renderer ── */
 function initPreview() {
   if (renderer) { renderer.setAnimationLoop(null); renderer.dispose(); }
 
@@ -333,16 +287,17 @@ function initPreview() {
   renderer.shadowMap.enabled = true;
   renderer.xr.enabled = true;
 
-  const w = previewWrap.clientWidth, h = previewWrap.clientHeight;
+  const w = previewWrap.clientWidth;
+  const h = previewWrap.clientHeight;
   renderer.setSize(w, h, false);
 
-  scene = new THREE.Scene();
+  scene  = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(55, w / h, 0.01, 200);
   camera.position.set(0, 1.4, 3);
 
   controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.07;
+  controls.enableDamping  = true;
+  controls.dampingFactor  = 0.07;
   controls.target.set(0, 0.5, 0);
 
   const ambient = new THREE.AmbientLight(0xffffff, 0.9);
@@ -361,38 +316,30 @@ function initPreview() {
   });
 }
 
-/* ── load GLB ── */
-const loader = new GLTFLoader();
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/');
-loader.setDRACOLoader(dracoLoader);
-
-window.useExample = (url) => {
-  document.getElementById('glb-url').value = url;
-  loadModel();
-};
-
-window.loadModel = async () => {
+/* ── load model ── */
+async function loadModel() {
   const url = document.getElementById('glb-url').value.trim();
   if (!url) { setStatus('Nhập link .glb trước.', true); return; }
 
-  currentGlbUrl = url;
-  setStatus('Đang tải model...');
+  currentGlbUrl  = url;
+  currentModel   = null;
+  animMixer      = null;
   btnAR.disabled = true;
-  if (currentModel) { scene && scene.remove(currentModel); currentModel = null; }
-  animMixer = null;
+  setStatus('Đang tải model...');
   initPreview();
 
   try {
-    const gltf = await new Promise((res, rej) => loader.load(url, res, undefined, rej));
+    const gltf  = await new Promise((res, rej) =>
+      gltfLoader.load(url, res, undefined, rej)
+    );
     const model = gltf.scene;
 
-    /* Tự động scale về kích thước hợp lý */
-    const box = new THREE.Box3().setFromObject(model);
-    const size = box.getSize(new THREE.Vector3());
+    /* auto-scale */
+    const box    = new THREE.Box3().setFromObject(model);
+    const size   = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
-    const scale = 1.6 / maxDim;
+    const scale  = 1.6 / maxDim;
     model.scale.setScalar(scale);
     model.position.sub(center.multiplyScalar(scale));
     model.position.y += (size.y * scale) / 2;
@@ -413,18 +360,23 @@ window.loadModel = async () => {
     controls.update();
     clearStatus();
     btnAR.disabled = false;
-  } catch (e) {
-    setStatus('Không tải được model. Kiểm tra URL và CORS của server.', true);
-    previewWrap.innerHTML = '';
-    previewWrap.appendChild(emptyState);
-  }
-};
 
-/* ── AR launch ── */
-window.launchAR = async () => {
+  } catch (e) {
+    console.error(e);
+    setStatus('Không tải được model. Kiểm tra URL và CORS của server.', true);
+    previewWrap.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-text">Không tải được model.<br>Kiểm tra URL hoặc CORS.</div>
+      </div>`;
+  }
+}
+
+/* ── AR ── */
+async function launchAR() {
   if (!currentGlbUrl) return;
 
-  /* iOS: dùng model-viewer với AR Quick Look */
+  /* iOS → model-viewer + Quick Look */
   if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     const mv = document.createElement('model-viewer');
     mv.setAttribute('src', currentGlbUrl);
@@ -436,13 +388,16 @@ window.launchAR = async () => {
     mv.style.cssText = 'width:100%;height:100%;';
     previewWrap.innerHTML = '';
     previewWrap.appendChild(mv);
-    setStatus('iOS: nhấn nút AR (hình vuông) trong góc model để xem trong không gian thực.');
+    setStatus('iOS: nhấn icon AR (hình vuông + mũi tên) để xem trong không gian thực.');
     return;
   }
 
-  /* Android / Desktop: WebXR */
-  if (!navigator.xr) { setStatus('Trình duyệt không hỗ trợ WebXR.', true); return; }
-  const supported = await navigator.xr.isSessionSupported('immersive-ar').catch(() => false);
+  /* Kiểm tra WebXR */
+  if (!navigator.xr) {
+    setStatus('Trình duyệt không hỗ trợ WebXR.', true); return;
+  }
+  const supported = await navigator.xr
+    .isSessionSupported('immersive-ar').catch(() => false);
   if (!supported) {
     setStatus('Thiết bị không hỗ trợ AR. Thử trên Android với Chrome.', true);
     return;
@@ -458,10 +413,10 @@ window.launchAR = async () => {
     renderer.xr.setReferenceSpaceType('local');
     await renderer.xr.setSession(xrSession);
 
-    const viewerSpace = await xrSession.requestReferenceSpace('viewer');
-    hitTestSource = await xrSession.requestHitTestSource({ space: viewerSpace });
+    const viewerSpace  = await xrSession.requestReferenceSpace('viewer');
+    hitTestSource      = await xrSession.requestHitTestSource({ space: viewerSpace });
 
-    /* Reticle (vòng nhắm) */
+    /* Reticle */
     reticle = new THREE.Mesh(
       new THREE.RingGeometry(0.06, 0.08, 32).rotateX(-Math.PI / 2),
       new THREE.MeshBasicMaterial({ color: 0x29b6f6, side: THREE.DoubleSide })
@@ -478,8 +433,10 @@ window.launchAR = async () => {
       if (!reticle.visible || !currentModel) return;
       if (placedModel) scene.remove(placedModel);
       placedModel = currentModel.clone(true);
-      const m = new THREE.Matrix4().fromArray(reticle.matrix.elements);
-      placedModel.position.setFromMatrixPosition(m);
+      const pos = new THREE.Vector3().setFromMatrixPosition(
+        new THREE.Matrix4().fromArray(reticle.matrix.elements)
+      );
+      placedModel.position.copy(pos);
       placedModel.scale.setScalar(0.4);
       scene.add(placedModel);
       arHint.textContent = 'Tap lại để di chuyển model.';
@@ -488,7 +445,7 @@ window.launchAR = async () => {
     renderer.setAnimationLoop((_, frame) => {
       if (frame && hitTestSource) {
         const localRef = renderer.xr.getReferenceSpace();
-        const hits = frame.getHitTestResults(hitTestSource);
+        const hits     = frame.getHitTestResults(hitTestSource);
         if (hits.length > 0) {
           const pose = hits[0].getPose(localRef);
           reticle.visible = true;
@@ -502,24 +459,38 @@ window.launchAR = async () => {
     });
 
     xrSession.addEventListener('end', cleanupAR);
+
   } catch (e) {
     setStatus('Không khởi động được AR: ' + e.message, true);
   }
-};
+}
 
-window.exitAR = () => { if (xrSession) xrSession.end(); };
+function exitAR()  { if (xrSession) xrSession.end(); }
 
 function cleanupAR() {
   if (hitTestSource) { hitTestSource.cancel(); hitTestSource = null; }
-  if (reticle) { scene.remove(reticle); reticle = null; }
-  if (placedModel) { scene.remove(placedModel); placedModel = null; }
+  if (reticle)       { scene.remove(reticle);  reticle = null; }
+  if (placedModel)   { scene.remove(placedModel); placedModel = null; }
   overlay.classList.remove('active');
   xrSession = null;
-
-  /* Resume preview */
   initPreview();
   if (currentModel) scene.add(currentModel);
 }
+
+/* ── wire up DOM events (sau khi module load) ── */
+document.getElementById('btn-load').addEventListener('click', loadModel);
+document.getElementById('btn-ar').addEventListener('click', launchAR);
+document.getElementById('btn-exit-ar').addEventListener('click', exitAR);
+document.getElementById('glb-url').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadModel();
+});
+document.getElementById('chips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  const url = chip.dataset.url;
+  document.getElementById('glb-url').value = url;
+  loadModel();
+});
 </script>
 
 </body>
